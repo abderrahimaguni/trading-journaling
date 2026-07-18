@@ -196,6 +196,24 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// Standalone version: uses the browser's localStorage instead of Claude's
+// artifact storage API, so data persists when this file is hosted (e.g. on
+// GitHub Pages) or opened directly, outside the Claude.ai preview.
+const storage = {
+  get: async function(key){
+    try{
+      const v = localStorage.getItem(key);
+      return (v !== null) ? { key: key, value: v } : null;
+    }catch(e){ return null; }
+  },
+  set: async function(key, value){
+    try{
+      localStorage.setItem(key, value);
+      return { key: key, value: value };
+    }catch(e){ return null; }
+  }
+};
+
 const state = { startingBalance: 27, trades: [], theme: 'light' };
 let calView = { mode: 'month', year: new Date().getFullYear(), month: new Date().getMonth() };
 let periodView = { key: '30d' };
@@ -203,7 +221,7 @@ let equityView = { key: 'all', customStart: '', customEnd: '' };
 
 async function loadData(){
   try{
-    const res = await window.storage.get('journal-data', false);
+    const res = await storage.get('journal-data');
     if(res && res.value){
       const parsed = JSON.parse(res.value);
       state.startingBalance = typeof parsed.startingBalance === 'number' ? parsed.startingBalance : 27;
@@ -231,7 +249,7 @@ async function onToggleTheme(){
 
 async function saveData(showToast){
   try{
-    const result = await window.storage.set('journal-data', JSON.stringify(state), false);
+    const result = await storage.set('journal-data', JSON.stringify(state));
     if(!result) throw new Error('no result');
     if(showToast) toast('Saved ✓');
   }catch(e){
