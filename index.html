@@ -196,6 +196,24 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// Standalone version: uses the browser's localStorage instead of Claude's
+// artifact storage API, so data persists when this file is hosted (e.g. on
+// GitHub Pages) or opened directly, outside the Claude.ai preview.
+const storage = {
+  get: async function(key){
+    try{
+      const v = localStorage.getItem(key);
+      return (v !== null) ? { key: key, value: v } : null;
+    }catch(e){ return null; }
+  },
+  set: async function(key, value){
+    try{
+      localStorage.setItem(key, value);
+      return { key: key, value: value };
+    }catch(e){ return null; }
+  }
+};
+
 const state = { startingBalance: 27, trades: [], theme: 'light' };
 let calView = { mode: 'month', year: new Date().getFullYear(), month: new Date().getMonth() };
 let periodView = { key: '30d' };
@@ -204,7 +222,7 @@ let historyLimit = 5;
 
 async function loadData(){
   try{
-    const res = await window.storage.get('journal-data', false);
+    const res = await storage.get('journal-data');
     if(res && res.value){
       const parsed = JSON.parse(res.value);
       state.startingBalance = typeof parsed.startingBalance === 'number' ? parsed.startingBalance : 27;
@@ -232,7 +250,7 @@ async function onToggleTheme(){
 
 async function saveData(showToast){
   try{
-    const result = await window.storage.set('journal-data', JSON.stringify(state), false);
+    const result = await storage.set('journal-data', JSON.stringify(state));
     if(!result) throw new Error('no result');
     if(showToast) toast('Saved ✓');
   }catch(e){
@@ -398,7 +416,7 @@ function render(){
   const loadMoreBtn = document.getElementById('loadMoreBtn');
   if(loadMoreBtn){
     loadMoreBtn.addEventListener('click', function(){
-      historyLimit += 6;
+      historyLimit += 5;
       render();
     });
   }
@@ -438,7 +456,7 @@ function renderTable(trades){
   const remaining = sorted.length - historyLimit;
   const moreBtn = remaining > 0 ?
     '<div style="text-align:center;margin-top:14px;">' +
-      '<button type="button" class="btn-ghost" id="loadMoreBtn">Load 10 More (' + remaining + ' remaining)</button>' +
+      '<button type="button" class="btn-ghost" id="loadMoreBtn">Load 5 More (' + remaining + ' remaining)</button>' +
     '</div>' : '';
   return '<table>' +
     '<thead><tr><th>Date</th><th>Symbol</th><th>Dir</th><th>Lot</th><th>Entry</th><th>Exit</th><th>P/L</th><th>Notes</th><th></th></tr></thead>' +
