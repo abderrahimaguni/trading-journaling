@@ -200,7 +200,7 @@ const state = { startingBalance: 27, trades: [], theme: 'light' };
 let calView = { mode: 'month', year: new Date().getFullYear(), month: new Date().getMonth() };
 let periodView = { key: '30d' };
 let equityView = { key: 'all', customStart: '', customEnd: '' };
-let historyLimit = 10;
+let historyLimit = 5;
 
 async function loadData(){
   try{
@@ -398,7 +398,7 @@ function render(){
   const loadMoreBtn = document.getElementById('loadMoreBtn');
   if(loadMoreBtn){
     loadMoreBtn.addEventListener('click', function(){
-      historyLimit += 10;
+      historyLimit += 6;
       render();
     });
   }
